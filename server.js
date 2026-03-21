@@ -12,7 +12,11 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(fileUpload());
 
 /* ---------------- DATABASE CONNECTION ---------------- */
@@ -68,6 +72,7 @@ app.post("/analyze", async (req, res) => {
     }
 });
 
+// 2. Image OCR & AI Analysis
 app.post("/analyze-image", async (req, res) => {
     if (!req.files || !req.files.image) return res.status(400).json({ error: "No image" });
 
@@ -76,14 +81,11 @@ app.post("/analyze-image", async (req, res) => {
     const base64Image = `data:${imageFile.mimetype};base64,${imageFile.data.toString('base64')}`;
 
     try {
-        // Bhai, Tesseract ko memory-efficient banane ke liye worker use karo
+        // --- YAHAN SE BADLAV HAI ---
         const worker = await Tesseract.createWorker('eng');
         const { data: { text } } = await worker.recognize(imageFile.data);
-        await worker.terminate(); // Kaam khatam hote hi memory khali karo!
-
-        if (!text || text.trim().length < 2) {
-            return res.status(400).json({ error: "Could not read text from image. Try a clearer photo." });
-        }
+        await worker.terminate(); // Memory khali karne ke liye zaruri hai
+        // --- YAHAN TAK ---
 
         const chatCompletion = await groq.chat.completions.create({
             messages: [
@@ -94,19 +96,11 @@ app.post("/analyze-image", async (req, res) => {
         });
 
         const aiText = chatCompletion.choices[0]?.message?.content || "Analysis Failed";
-        
-        // Database mein save karo
-        await Report.create({ 
-            text: text.substring(0, 500), // Pura text save na karein
-            image: base64Image, 
-            result: aiText, 
-            username: username 
-        });
-
+        await Report.create({ text, image: base64Image, result: aiText, username: username });
         res.json({ success: true, result: aiText });
     } catch (err) {
         console.error("OCR Error:", err);
-        res.status(500).json({ error: "Server busy. Please try again in 1 minute." });
+        res.status(500).json({ error: err.message });
     }
 });
 
