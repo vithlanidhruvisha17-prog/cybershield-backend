@@ -69,7 +69,7 @@ app.post("/analyze", async (req, res) => {
 });
 
 // 2. Image OCR & AI Analysis
-app.post("/api/analyze-image", async (req, res) => {
+app.post("/analyze-image", async (req, res) => {
     if (!req.files || !req.files.image) return res.status(400).json({ error: "No image" });
 
     const imageFile = req.files.image;
