@@ -68,16 +68,23 @@ app.post("/analyze", async (req, res) => {
     }
 });
 
-// 2. Image OCR & AI Analysis
 app.post("/analyze-image", async (req, res) => {
     if (!req.files || !req.files.image) return res.status(400).json({ error: "No image" });
 
     const imageFile = req.files.image;
-    const username = req.body.username; 
+    const username = req.body.username || "Anonymous"; 
     const base64Image = `data:${imageFile.mimetype};base64,${imageFile.data.toString('base64')}`;
 
     try {
-        const { data: { text } } = await Tesseract.recognize(imageFile.data, 'eng');
+        // Bhai, Tesseract ko memory-efficient banane ke liye worker use karo
+        const worker = await Tesseract.createWorker('eng');
+        const { data: { text } } = await worker.recognize(imageFile.data);
+        await worker.terminate(); // Kaam khatam hote hi memory khali karo!
+
+        if (!text || text.trim().length < 2) {
+            return res.status(400).json({ error: "Could not read text from image. Try a clearer photo." });
+        }
+
         const chatCompletion = await groq.chat.completions.create({
             messages: [
                 { role: "system", content: "You are a Cyber Security Expert. Analyze for threats, Risk Rating (0-10), and 3 safety tips." },
@@ -87,10 +94,19 @@ app.post("/analyze-image", async (req, res) => {
         });
 
         const aiText = chatCompletion.choices[0]?.message?.content || "Analysis Failed";
-        await Report.create({ text, image: base64Image, result: aiText, username: username || "Anonymous" });
+        
+        // Database mein save karo
+        await Report.create({ 
+            text: text.substring(0, 500), // Pura text save na karein
+            image: base64Image, 
+            result: aiText, 
+            username: username 
+        });
+
         res.json({ success: true, result: aiText });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("OCR Error:", err);
+        res.status(500).json({ error: "Server busy. Please try again in 1 minute." });
     }
 });
 
