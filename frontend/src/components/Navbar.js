@@ -59,9 +59,9 @@ const Navbar = () => {
                                 {isSearchOpen ? '✕' : '🔍'}
                             </button>
 
-                            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                                isSearchOpen ? 'w-[180px] sm:w-[250px] md:w-[350px] ml-2 opacity-100' : 'w-0 opacity-0'
-                            }`}>
+                            <div className={`transition-all duration-500 ease-in-out ${
+    isSearchOpen ? 'w-[180px] sm:w-[250px] md:w-[350px] ml-2 opacity-100 overflow-visible' : 'w-0 opacity-0 overflow-hidden'
+}`}>
                                 <div className="min-w-[180px] sm:min-w-[250px] md:min-w-[350px]">
                                     <SearchAnalysts />
                                 </div>

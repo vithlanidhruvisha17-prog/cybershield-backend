@@ -183,7 +183,7 @@ app.post("/api/follow", async (req, res) => {
         const existingFollow = await Follow.findOne({ follower, following });
         if (existingFollow) return res.status(400).json({ message: "Already following." });
         await new Follow({ follower, following }).save();
-        res.status(200).json({ message: "Followed successfully!" });
+        res.status(200).json({ success: true, message: "Followed successfully!" });
     } catch (err) { res.status(500).json({ error: "Server error" }); }
 });
 
@@ -237,6 +237,23 @@ app.get("/api/cyber-news", async (req, res) => {
         const response = await axios.get("https://api.rss2json.com/v1/api.json?rss_url=https://www.bleepingcomputer.com/feed/");
         res.json({ success: true, news: response.data.items.slice(0, 50).map(i => i.title) });
     } catch (err) { res.json({ success: true, news: ["Update your security settings!"] }); }
+});
+
+app.get('/api/is-following/:follower/:following', async (req, res) => {
+    try {
+        const connection = await Follow.findOne({ follower: req.params.follower, following: req.params.following });
+        res.json({ following: !!connection });
+    } catch (err) { res.status(500).json({ error: "DB Error" }); }
+});
+
+app.post("/api/unfollow", async (req, res) => {
+    const { follower, following } = req.body;
+    try {
+        await Follow.findOneAndDelete({ follower, following });
+        res.status(200).json({ success: true, message: "Unfollowed successfully!" });
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
 });
 
 app.get("/api/user-details/:username", async (req, res) => {

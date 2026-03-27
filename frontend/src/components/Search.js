@@ -10,7 +10,6 @@ const SearchAnalysts = () => {
     const navigate = useNavigate();
     const searchRef = useRef(null);
 
-    // Click outside dropdown to close it
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -45,7 +44,6 @@ const SearchAnalysts = () => {
     }, [query]);
 
     const handleSelect = (username) => {
-        console.log("Navigating to:", username);
         setQuery('');
         setResults([]);
         navigate(`/analyst/${username}`);
@@ -53,55 +51,45 @@ const SearchAnalysts = () => {
 
     return (
         <div className="relative w-full" ref={searchRef}>
-            {/* 🔍 Input Field */}
             <div className="relative flex items-center">
                 <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search Analyst ID..."
-                    className="w-full bg-white/5 border border-white/10 rounded-full py-2 px-4 text-white text-xs focus:outline-none focus:border-[#FFD700] focus:bg-white/10 transition-all placeholder:text-gray-500"
+                    className="w-full bg-[#1a1a1a] border border-[#FFD700]/30 rounded-full py-2 px-4 text-white text-[10px] md:text-xs focus:outline-none focus:border-[#FFD700] transition-all"
                 />
-                
-                {/* 🌀 Stylish Spinner inside Input */}
                 {loading && (
-                    <div className="absolute right-3">
-                        <div className="w-3.5 h-3.5 border-2 border-[#FFD700]/30 border-t-[#FFD700] rounded-full animate-spin"></div>
-                    </div>
+                    <div className="absolute right-3 w-3 h-3 border-2 border-[#FFD700] border-t-transparent rounded-full animate-spin"></div>
                 )}
             </div>
 
-            {/* 📈 Search Results Dropdown */}
+            {/* 📈 FIXED DROPDOWN: Yeh Navbar ke overflow-hidden ko bypass karega */}
             {results.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-[#0f0f0f] border border-white/10 rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.7)] z-[9999] backdrop-blur-md">
-                    <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                <div 
+                    className="fixed mt-2 bg-[#0d0d0d] border border-white/10 rounded-xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-[99999]"
+                    style={{ 
+                        width: searchRef.current ? searchRef.current.offsetWidth : '300px',
+                        // Calculate position based on input field
+                        top: searchRef.current ? searchRef.current.getBoundingClientRect().bottom : '0px'
+                    }}
+                >
+                    <div className="max-h-[250px] overflow-y-auto">
                         {results.map((item) => (
                             <div
                                 key={item._id}
                                 onMouseDown={(e) => {
-                                    e.preventDefault(); // Stop blur
+                                    e.preventDefault();
                                     handleSelect(item.username);
                                 }}
-                                className="group flex items-center gap-3 px-4 py-3 hover:bg-[#FFD700] transition-all cursor-pointer border-b border-white/5 last:border-none"
+                                className="flex items-center gap-3 px-4 py-3 hover:bg-[#FFD700] group cursor-pointer border-b border-white/5 last:border-none transition-colors"
                             >
-                                {/* Initial Circle */}
-                                <div className="w-9 h-9 bg-white/10 group-hover:bg-black/20 rounded-full flex items-center justify-center text-[#FFD700] group-hover:text-black font-black text-sm shrink-0 transition-colors">
+                                <div className="w-8 h-8 bg-white/5 group-hover:bg-black/20 rounded-full flex items-center justify-center text-[#FFD700] group-hover:text-black font-bold text-[10px] shrink-0">
                                     {item.username.charAt(0).toUpperCase()}
                                 </div>
-
-                                {/* User Info */}
-                                <div className="flex flex-col overflow-hidden text-left">
-                                    <p className="text-white group-hover:text-black text-xs font-bold truncate transition-colors">
-                                        @{item.username}
-                                    </p>
-                                    <p className="text-gray-500 group-hover:text-black/60 text-[10px] truncate transition-colors">
-                                        {item.fullname || 'Field Agent'}
-                                    </p>
-                                </div>
-                                
-                                {/* Shortcut Arrow */}
-                                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="text-black text-xs">→</span>
+                                <div className="flex flex-col text-left overflow-hidden">
+                                    <p className="text-white group-hover:text-black text-xs font-bold truncate">@{item.username}</p>
+                                    <p className="text-gray-500 group-hover:text-black/60 text-[9px] truncate">{item.fullname || 'Cyber Analyst'}</p>
                                 </div>
                             </div>
                         ))}
