@@ -116,28 +116,29 @@ app.post("/analyze-image", async (req, res) => {
 /* ---------------- FEED & SOCIAL SYSTEM ---------------- */
 
 // Main Feed
+// server.js mein is block ko update karein
 app.get('/api/reports', async (req, res) => {
     try {
         const reports = await Report.find().sort({ createdAt: -1 }).limit(100).lean();
         
         const reportsWithUserStats = await Promise.all(reports.map(async (post) => {
-            const userData = await User.findOne({ username: post.username }, 'profilePic').lean();
+            // Check if post.username exists
+            const userData = post.username 
+                ? await User.findOne({ username: post.username }, 'profilePic').lean() 
+                : null;
             
-            // Yahan logic check karo: Agar profilePic null ya empty hai toh fallback do
             return { 
                 ...post, 
-                userProfilePic: (userData && userData.profilePic && userData.profilePic.trim() !== "") 
-                    ? userData.profilePic 
-                    : "" 
+                userProfilePic: (userData && userData.profilePic) ? userData.profilePic : "" 
             };
         }));
 
         res.json(reportsWithUserStats);
     } catch (err) { 
-        res.status(500).json({ error: err.message }); 
+        console.error("Feed Error:", err);
+        res.status(500).json({ error: "Internal Server Error" }); 
     }
 });
-
 // Profile Grid (User specific history - Case Insensitive)
 app.get('/api/user-reports/:username', async (req, res) => {
     try {
