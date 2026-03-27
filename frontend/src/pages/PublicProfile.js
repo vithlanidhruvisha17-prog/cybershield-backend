@@ -119,10 +119,10 @@ const PublicProfile = () => {
     className={`px-8 py-1.5 rounded-md text-xs font-black uppercase transition-all active:scale-95 
         ${isFollowing 
             ? 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-red-500/50 hover:text-red-500' 
-            : 'bg-[#FFD700] text-black hover:bg-white'
+            : 'bg-[#FFD700] text-black'
         }`}
 >
-    {isFollowing ? 'Unfollow' : 'Follow Analyst'}
+    {isFollowing ? 'Unfollow' : 'Follow'}
 </button>
                         </div>
                         

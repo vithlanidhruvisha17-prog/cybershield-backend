@@ -6,6 +6,8 @@ const axios = require("axios");
 const Groq = require("groq-sdk");
 const fileUpload = require("express-fileupload");
 const Tesseract = require("tesseract.js");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 
 const app = express();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -111,6 +113,35 @@ app.post("/analyze-image", async (req, res) => {
         console.error("OCR/AI Error:", err);
         res.status(500).json({ error: err.message });
     }
+});
+
+app.post("/api/forgot-password", async (req, res) => {
+    const { email } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Temporary Token (Sirf 1 ghante ke liye)
+        const resetToken = crypto.randomBytes(20).toString('hex');
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+        await user.save();
+
+        // Nodemailer Config (Email bhejne ke liye)
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+        });
+
+        const mailOptions = {
+            to: user.email,
+            subject: 'CyberShield Password Reset',
+            text: `Aapka password reset link ye raha: \n\n http://localhost:3000/reset/${resetToken}`
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.json({ success: true, message: "Reset link sent to email!" });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 /* ---------------- FEED & SOCIAL SYSTEM ---------------- */

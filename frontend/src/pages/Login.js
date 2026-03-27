@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../config';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -90,7 +91,15 @@ const Login = () => {
 
                             <button type="submit" className="w-full bg-[#FFD700] text-black font-extrabold py-4 rounded-full border-2 border-[#FFD700] hover:bg-transparent hover:text-[#FFD700] transition-all shadow-lg">Login</button>
                             
-                            <button type="button" onClick={handleGoogleLogin} className="w-full border border-gray-800 py-3.5 rounded-xl text-gray-400 text-[11px] font-bold hover:border-[#FFD700]/50 hover:text-white transition-all">CONTINUE WITH GOOGLE</button>
+                            <GoogleLogin
+  onSuccess={credentialResponse => {
+    console.log(credentialResponse);
+    // Is credentialResponse.credential ko backend bhejo verify karne ke liye
+  }}
+  onError={() => {
+    console.log('Login Failed');
+  }}
+/>
 
                             <p className="text-center text-sm text-gray-500 mt-6 font-medium">New user ? <Link to="/signup" className="text-[#FFD700] font-black hover:underline ml-1">Sign Up</Link></p>
                         </form>
