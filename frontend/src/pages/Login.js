@@ -12,20 +12,14 @@ const Login = () => {
     const navigate = useNavigate();
 
     const handleGoogleSuccess = (credentialResponse) => {
-    // 1. Google se milne wala token decode karo
     const details = jwtDecode(credentialResponse.credential);
-    console.log("User Details:", details);
-
-    // 2. LocalStorage mein user data save karo (taaki app ko pata chale login hai)
+    
     localStorage.setItem("currentUser", details.name);
     localStorage.setItem("userEmail", details.email);
     localStorage.setItem("isLoggedIn", "true");
 
-    // 3. Boom! Ab user ko Home ya Profile page pe bhej do
-    alert(`Welcome ${details.name}!`);
-    navigate('/profile'); 
+    setShowModal(true); 
 };
-
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
@@ -107,13 +101,17 @@ const Login = () => {
 
                             <button type="submit" className="w-full bg-[#FFD700] text-black font-extrabold py-4 rounded-full border-2 border-[#FFD700] hover:bg-transparent hover:text-[#FFD700] transition-all shadow-lg">Login</button>
                             
-                            <GoogleLogin
-  onSuccess={handleGoogleSuccess}
-  onError={() => {
-    console.log('Login Failed');
-  }}
-/>
-
+                            <div className="mt-6 flex flex-col items-center border-t border-white/5 pt-6">
+    <div className="text-gray-500 text-[10px] mb-4 uppercase font-bold tracking-widest">— OR LOGIN WITH —</div>
+    <GoogleLogin
+        onSuccess={handleGoogleSuccess}
+        onError={() => console.log('Login Failed')}
+        theme="filled_blue" 
+        shape="pill"        
+        text="signin_with"  
+        width="280"
+    />
+</div>
                             <p className="text-center text-sm text-gray-500 mt-6 font-medium">New user ? <Link to="/signup" className="text-[#FFD700] font-black hover:underline ml-1">Sign Up</Link></p>
                         </form>
                     </div>

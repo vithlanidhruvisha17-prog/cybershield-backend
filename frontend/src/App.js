@@ -14,6 +14,7 @@ import PublicProfile from './pages/PublicProfile';
 import Navbar from './components/Navbar';
 import SearchAnalysts from './components/Search';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/analyst/:username" element={<PublicProfile />} />
             <Route path="/search" element={<SearchAnalysts />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
           </Routes>
         </div>
       </Router>

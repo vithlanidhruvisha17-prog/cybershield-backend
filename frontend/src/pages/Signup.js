@@ -54,29 +54,29 @@ const Signup = () => {
 
     // ✅ Google Signup Logic
     const handleGoogleSignup = async (credentialResponse) => {
-        try {
-            const details = jwtDecode(credentialResponse.credential);
+    try {
+        const details = jwtDecode(credentialResponse.credential);
+        
+        const res = await axios.post(`${API_URL}/api/signup`, {
+            username: details.email.split('@')[0], 
+            fullname: details.name,
+            email: details.email,
+            password: "GOOGLE_USER_" + details.sub, 
+            isGoogleUser: true 
+        });
+
+        if (res.data.success || res.data.message === "User already exists") {
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("currentUser", details.name);
             
-            const res = await axios.post(`${API_URL}/api/signup`, {
-                username: details.email.split('@')[0], 
-                fullname: details.name,
-                email: details.email,
-                password: "GOOGLE_USER_" + details.sub, 
-                isGoogleUser: true 
-            });
-
-            if (res.data.success || res.data.message === "User already exists") {
-                localStorage.setItem("isLoggedIn", "true");
-                localStorage.setItem("currentUser", details.name);
-                alert(`Account Ready! Welcome ${details.name}`);
-                navigate('/report');
-            }
-        } catch (error) {
-            console.error("Signup Error:", error);
-            alert("Google Signup failed!");
+            // ✅ Alert hata diya, ab Modal dikhega
+            setShowModal(true); 
         }
-    };
-
+    } catch (error) {
+        console.error("Signup Error:", error);
+        alert("Google Signup failed!");
+    }
+};
     return (
         <div className="bg-[#0b0b0b] text-white min-h-screen font-sans selection:bg-[#FFD700] selection:text-black">
             {showModal && (
@@ -140,16 +140,17 @@ const Signup = () => {
                             </div>
                             <button type="submit" className="w-full bg-[#FFD700] text-black font-extrabold py-4 rounded-full border-2 border-[#FFD700] hover:bg-transparent hover:text-[#FFD700] transition-all mt-4 shadow-lg">Create Account</button>
                             
-                            <div className="mt-6 flex flex-col items-center">
-                                <div className="text-gray-500 text-xs mb-4 uppercase font-bold tracking-widest">— OR SIGNUP WITH —</div>
-                                <GoogleLogin
-                                    onSuccess={handleGoogleSignup}
-                                    onError={() => console.log('Signup Failed')}
-                                    theme="filled_blue"
-                                    shape="pill"
-                                    text="signup_with"
-                                />
-                            </div>
+                            <div className="mt-6 flex flex-col items-center border-t border-white/5 pt-6">
+    <div className="text-gray-500 text-[10px] mb-4 uppercase font-bold tracking-widest">— OR SIGNUP WITH —</div>
+    <GoogleLogin
+        onSuccess={handleGoogleSignup}
+        onError={() => console.log('Signup Failed')}
+        theme="filled_blue" // ✅ Login se match karne ke liye
+        shape="pill"
+        text="signup_with"  // ✅ Signup page hai toh signup_with
+        width="280"
+    />
+</div>
                             
                             <p className="text-center text-xs text-gray-500 mt-4 font-medium">Already have an account? <Link to="/login" className="text-[#FFD700] font-black hover:underline ml-1">Login</Link></p>
                         </form>
