@@ -26,11 +26,11 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/report" element={<Report />} />
-          <Route path="/Profile" element={<Profile />} />
-          <Route path="/Tutorial" element={<Tutorial />} />
-          <Route path="/Live" element={<Live />} />
-          <Route path="/About" element={<About />} />
-          <Route path="/Profile/:username" element={<PublicProfile />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/tutorial" element={<Tutorial />} />
+          <Route path="/live" element={<Live />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/analyst/:username" element={<PublicProfile />} />
           <Route path="/Search" element={<SearchAnalysts />} />
         </Routes>
       </div>

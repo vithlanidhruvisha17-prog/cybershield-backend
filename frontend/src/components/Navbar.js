@@ -26,6 +26,10 @@ const Navbar = () => {
     };
 
     const isActive = (path) => location.pathname === path;
+   
+    if (location.pathname === '/login' || location.pathname === '/signup') {
+        return null; 
+    }
 
     return (
         <>
