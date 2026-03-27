@@ -206,11 +206,23 @@ app.get('/api/followers/:username', async (req, res) => {
 
 app.post("/api/signup", async (req, res) => {
     try {
-        const { username } = req.body;
-        if (await User.findOne({ username })) return res.json({ success: false, message: "Taken!" });
-        const newUser = await new User(req.body).save();
+        const { username, email, fullname, password } = req.body;
+        
+        // 1. Check if user already exists
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: "Username or Email already taken!" });
+        }
+
+        // 2. Create new user
+        const newUser = new User({ fullname, email, username, password });
+        await newUser.save();
+
         res.json({ success: true, user: { username: newUser.username } });
-    } catch (err) { res.status(500).json({ success: false }); }
+    } catch (err) {
+        console.error("Signup DB Error:", err); // Ye aapko terminal mein error dikhayega
+        res.status(500).json({ success: false, message: "Database Error: " + err.message });
+    }
 });
 
 app.post("/api/login", async (req, res) => {
@@ -275,24 +287,23 @@ app.post("/api/update-profile", async (req, res) => {
 /* ---------------- SEARCH SYSTEM (Corrected) ---------------- */
 
 app.get('/api/search-users', async (req, res) => {
-    const query = req.query.q; // Ab ye sahi jagah par hai
-    if (!query || query.length < 2) return res.json([]); // Kam se kam 2 characters par search karega
+    const query = req.query.q;
+    if (!query || query.trim().length < 2) return res.json([]); 
 
     try {
-        // Username ya Fullname dono mein search karega (case-insensitive)
+        const searchTerm = query.trim(); // Space hatao
         const users = await User.find({
             $or: [
-                { username: { $regex: query, $options: 'i' } },
-                { fullname: { $regex: query, $options: 'i' } }
+                { username: new RegExp(searchTerm, 'i') }, 
+                { fullname: new RegExp(searchTerm, 'i') }
             ]
         })
-        .select('username fullname profilePic bio') // Sirf zaroori fields bhejenge
+        .select('username fullname profilePic bio')
         .limit(10)
-        .lean(); // lean() se query fast ho jati hai
+        .lean();
 
         res.json(users);
     } catch (err) {
-        console.error("Search Error:", err);
         res.status(500).json({ error: "Search failed" });
     }
 });
