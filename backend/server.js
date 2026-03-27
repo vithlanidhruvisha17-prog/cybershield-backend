@@ -228,7 +228,10 @@ app.get("/api/cyber-news", async (req, res) => {
 
 app.get("/api/user-details/:username", async (req, res) => {
     try {
-        const user = await User.findOne({ username: req.params.username });
+        // Find user ignoring case (i option)
+        const user = await User.findOne({ 
+            username: { $regex: new RegExp("^" + req.params.username + "$", "i") } 
+        });
         if (!user) return res.status(404).json({ error: "User not found" });
         
         res.json({
