@@ -3,12 +3,28 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import API_URL from '../config';
 import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showModal, setShowModal] = useState(false); // Success Modal State
     const navigate = useNavigate();
+
+    const handleGoogleSuccess = (credentialResponse) => {
+    // 1. Google se milne wala token decode karo
+    const details = jwtDecode(credentialResponse.credential);
+    console.log("User Details:", details);
+
+    // 2. LocalStorage mein user data save karo (taaki app ko pata chale login hai)
+    localStorage.setItem("currentUser", details.name);
+    localStorage.setItem("userEmail", details.email);
+    localStorage.setItem("isLoggedIn", "true");
+
+    // 3. Boom! Ab user ko Home ya Profile page pe bhej do
+    alert(`Welcome ${details.name}!`);
+    navigate('/profile'); 
+};
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -92,10 +108,7 @@ const Login = () => {
                             <button type="submit" className="w-full bg-[#FFD700] text-black font-extrabold py-4 rounded-full border-2 border-[#FFD700] hover:bg-transparent hover:text-[#FFD700] transition-all shadow-lg">Login</button>
                             
                             <GoogleLogin
-  onSuccess={credentialResponse => {
-    console.log(credentialResponse);
-    // Is credentialResponse.credential ko backend bhejo verify karne ke liye
-  }}
+  onSuccess={handleGoogleSuccess}
   onError={() => {
     console.log('Login Failed');
   }}
