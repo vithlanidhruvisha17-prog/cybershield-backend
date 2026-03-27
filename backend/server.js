@@ -42,7 +42,7 @@ const UserSchema = new mongoose.Schema({
     bio: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now }
 });
-const User = mongoose.model("User", UserSchema);
+const User = mongoose.model("User", UserSchema, "users");
 
 const Follow = mongoose.model("Follow", new mongoose.Schema({
     follower: String,  // Jo follow kar raha hai
