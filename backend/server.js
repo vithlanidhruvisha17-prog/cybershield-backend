@@ -219,12 +219,16 @@ app.post("/api/login", async (req, res) => {
     else res.json({ success: false, message: "Invalid credentials" });
 });
 
+app.get("/api/cyber-news", async (req, res) => {
+    try {
+        const response = await axios.get("https://api.rss2json.com/v1/api.json?rss_url=https://www.bleepingcomputer.com/feed/");
+        res.json({ success: true, news: response.data.items.slice(0, 50).map(i => i.title) });
+    } catch (err) { res.json({ success: true, news: ["Update your security settings!"] }); }
+});
+
 app.get("/api/user-details/:username", async (req, res) => {
     try {
-        // Find user ignoring case (i option)
-        const user = await User.findOne({ 
-            username: { $regex: new RegExp("^" + req.params.username + "$", "i") } 
-        });
+        const user = await User.findOne({ username: req.params.username });
         if (!user) return res.status(404).json({ error: "User not found" });
         
         res.json({
