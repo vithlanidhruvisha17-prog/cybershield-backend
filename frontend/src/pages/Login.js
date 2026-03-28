@@ -8,18 +8,35 @@ import { jwtDecode } from "jwt-decode";
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [showModal, setShowModal] = useState(false); // Success Modal State
+    const [showModal, setShowModal] = useState(false); 
     const navigate = useNavigate();
 
-    const handleGoogleSuccess = (credentialResponse) => {
-    const details = jwtDecode(credentialResponse.credential);
-    
-    localStorage.setItem("currentUser", details.name);
-    localStorage.setItem("userEmail", details.email);
-    localStorage.setItem("isLoggedIn", "true");
+    // ✅ Google Login Logic (Backend Connection ke saath)
+    const handleGoogleSuccess = async (credentialResponse) => {
+        try {
+            const details = jwtDecode(credentialResponse.credential);
+            
+            // Backend par check karo ki user exist karta hai ya nahi
+            const res = await axios.post(`${API_URL}/api/login`, { 
+                email: details.email, 
+                isGoogleUser: true 
+            });
 
-    setShowModal(true); 
-};
+            if (res.data.success) {
+                localStorage.setItem("isLoggedIn", "true");
+                localStorage.setItem("currentUser", details.name);
+                localStorage.setItem("userEmail", details.email);
+                setShowModal(true); 
+            } else {
+                alert(res.data.message || "Google login failed");
+            }
+        } catch (error) {
+            console.error("Google Login error:", error);
+            alert("Server se connect nahi ho paya!");
+        }
+    };
+
+    // ✅ Manual Login Logic
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
@@ -27,22 +44,14 @@ const Login = () => {
             if (res.data.success) {
                 localStorage.setItem("isLoggedIn", "true");
                 localStorage.setItem("currentUser", res.data.user.username);
-                setShowModal(true); // Login success par modal dikhao
+                setShowModal(true);
             } else {
-                alert("Ghalat details bhai!");
+                alert("Ghalat details bhai! Check karo.");
             }
         } catch (error) {
             console.error("Login error:", error);
-            alert("Can not connect with server");
+            alert("Can not connect with server. Backend chalu hai?");
         }
-    };
-
-    const handleGoogleLogin = () => {
-        alert("Google Login functionality backend se connect karni hogi!");
-    };
-
-    const handleForgotPassword = () => {
-        alert("Reset link aapki email par bhej diya gaya hai (Simulated)!");
     };
 
     return (
@@ -66,13 +75,13 @@ const Login = () => {
                 </div>
             )}
 
-            {/* UNIFIED HEADER */}
+            {/* HEADER */}
             <header className="fixed top-0 left-0 w-full p-6 md:p-10 flex justify-between items-center z-50">
                 <Link to="/" className="flex items-center gap-3 group">
                     <div className="bg-[#FFD700] text-black w-10 h-10 flex items-center justify-center rounded-xl font-black text-2xl group-hover:scale-110 transition-transform">C</div>
                     <span className="text-[#FFD700] font-black text-xl md:text-2xl tracking-tighter uppercase">CYBERSHIELD HUB</span>
                 </Link>
-                <Link to="/signup" className="bg-[#FFD700] text-black px-8 py-2.5 rounded-full font-bold text-sm  transition-all shadow-lg">
+                <Link to="/signup" className="bg-[#FFD700] text-black px-8 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg">
                     SIGN UP
                 </Link>
             </header>
@@ -88,30 +97,45 @@ const Login = () => {
                         <form className="space-y-6" onSubmit={handleLogin}>
                             <div className="space-y-1">
                                 <label className="text-[#FFD700] text-xs font-bold uppercase tracking-widest ml-1">Username</label>
-                                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="w-full p-3.5 bg-[#0e0e0e] border border-white/5 rounded-xl outline-none focus:border-[#FFD700]/50 text-sm text-white" required />
+                                <input 
+                                    type="text" value={username} onChange={(e) => setUsername(e.target.value)} 
+                                    placeholder="Username" 
+                                    className="w-full p-3.5 bg-[#0e0e0e] border border-white/5 rounded-xl outline-none focus:border-[#FFD700]/50 text-sm text-white" 
+                                    required 
+                                />
                             </div>
 
                             <div className="space-y-1">
                                 <label className="text-[#FFD700] text-xs font-bold uppercase tracking-widest ml-1">Password</label>
-                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="w-full p-3.5 bg-[#0e0e0e] border border-white/5 rounded-xl outline-none focus:border-[#FFD700]/50 text-sm text-white" required />
-                                <div className="flex justify-end">
-                                    <button type="button" onClick={handleForgotPassword} className="text-[10px] text-gray-500 hover:text-[#FFD700] mt-2">Forgot Password?</button>
-                                </div>
+                                <input 
+                                    type="password" value={password} onChange={(e) => setPassword(e.target.value)} 
+                                    placeholder="Password" 
+                                    className="w-full p-3.5 bg-[#0e0e0e] border border-white/5 rounded-xl outline-none focus:border-[#FFD700]/50 text-sm text-white" 
+                                    required 
+                                />
+                                <p 
+                                    onClick={() => navigate('/forgot-password')} 
+                                    className="text-[#FFD700] cursor-pointer text-[12px] text-right mt-2 hover:underline"
+                                >
+                                    Forgot Password?
+                                </p>
                             </div>
 
-                            <button type="submit" className="w-full bg-[#FFD700] text-black font-extrabold py-4 rounded-full border-2 border-[#FFD700] hover:bg-transparent hover:text-[#FFD700] transition-all shadow-lg">Login</button>
+                            <button type="submit" className="w-full bg-[#FFD700] text-black font-extrabold py-4 rounded-full border-2 border-[#FFD700] hover:bg-transparent hover:text-[#FFD700] transition-all shadow-lg">
+                                Login
+                            </button>
                             
                             <div className="mt-6 flex flex-col items-center border-t border-white/5 pt-6">
-    <div className="text-gray-500 text-[10px] mb-4 uppercase font-bold tracking-widest">— OR LOGIN WITH —</div>
-    <GoogleLogin
-        onSuccess={handleGoogleSuccess}
-        onError={() => console.log('Login Failed')}
-        theme="filled_blue" 
-        shape="pill"        
-        text="signin_with"  
-        width="280"
-    />
-</div>
+                                <div className="text-gray-500 text-[10px] mb-4 uppercase font-bold tracking-widest">— OR LOGIN WITH —</div>
+                                <GoogleLogin
+                                    onSuccess={handleGoogleSuccess}
+                                    onError={() => console.log('Login Failed')}
+                                    theme="filled_blue" 
+                                    shape="pill"        
+                                    text="signin_with"  
+                                    width="280"
+                                />
+                            </div>
                             <p className="text-center text-sm text-gray-500 mt-6 font-medium">New user ? <Link to="/signup" className="text-[#FFD700] font-black hover:underline ml-1">Sign Up</Link></p>
                         </form>
                     </div>
@@ -120,4 +144,5 @@ const Login = () => {
         </div>
     );
 };
+
 export default Login;
