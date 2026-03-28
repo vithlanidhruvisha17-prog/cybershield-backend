@@ -100,13 +100,14 @@ app.post('/api/forgot-password', async (req, res) => {
         user.otpExpires = Date.now() + 600000; 
         await user.save();
 
-        await transporter.sendMail({
-            from: '"CyberShield Hub" <vithlanidhruvisha17@gmail.com>',
-            to: email,
-            subject: 'Your Shield Reset OTP',
-            html: `<div style="background:#000; color:#FFD700; padding:20px; border:2px solid #FFD700; border-radius:10px;">
-                   <h1>OTP: ${otp}</h1><p>Valid for 10 minutes.</p></div>`
-        });
+        // Route ke andar jahan transporter.sendMail hai:
+await transporter.sendMail({
+    from: `"CyberShield Hub" <${process.env.EMAIL_USER}>`, // ✅ Dynamic email
+    to: email,
+    subject: 'Your Shield Reset OTP',
+    html: `<div style="background:#000; color:#FFD700; padding:20px; border:2px solid #FFD700; border-radius:10px;">
+           <h1>OTP: ${otp}</h1><p>Valid for 10 minutes.</p></div>`
+});
         res.json({ success: true, message: "OTP bhej diya hai!" });
     } catch (err) {
         res.json({ success: false, message: "Error aa gaya!" });
