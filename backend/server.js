@@ -58,11 +58,17 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 /* ---------------- EMAIL CONFIG ---------------- */
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER, // ✅ Ye Render se lega
-        pass: process.env.EMAIL_PASS  // ✅ Ye bhi Render se lega
-    }
+  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587, // 465 ki jagah 587 use karein
+  secure: false, // 587 ke liye false hota hai (TLS use karein)
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false // Connection issues bypass karne ke liye
+  }
 });
 
 
