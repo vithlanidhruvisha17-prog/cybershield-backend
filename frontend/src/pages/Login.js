@@ -133,7 +133,7 @@ const Login = () => {
                                     theme="filled_blue" 
                                     shape="pill"        
                                     text="signin_with"  
-                                    width="280"
+                                    width="250"
                                 />
                             </div>
                             <p className="text-center text-sm text-gray-500 mt-6 font-medium">New user ? <Link to="/signup" className="text-[#FFD700] font-black hover:underline ml-1">Sign Up</Link></p>

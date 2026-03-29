@@ -148,7 +148,7 @@ const Signup = () => {
         theme="filled_blue" // ✅ Login se match karne ke liye
         shape="pill"
         text="signup_with"  // ✅ Signup page hai toh signup_with
-        width="280"
+        width="250"
     />
 </div>
                             

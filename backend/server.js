@@ -58,16 +58,11 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 
 /* ---------------- EMAIL CONFIG ---------------- */
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465, // Render par 465 + secure: true zyada stable hai
-    secure: true, 
+    service: "gmail",
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    connectionTimeout: 10000, // 10 seconds wait karega
-    greetingTimeout: 10000,
-    socketTimeout: 10000
+        pass: process.env.EMAIL_PASS // Yahan wo 16-digit App Password aayega
+    }
 });
 
 // Verify connection configuration
