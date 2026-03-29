@@ -116,7 +116,7 @@ app.post('/api/forgot-password', async (req, res) => {
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'CyberShield Reset OTP',
-            html: `<h1>OTP: ${otp}</h1>`
+            text: `Your OTP is: ${otp}`
         };
 
         // ⚠️ Sabse zaroori: transporter.sendMail ko await karo
