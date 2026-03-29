@@ -9,23 +9,18 @@ const ForgotPassword = () => {
     const [newPassword, setNewPassword] = useState('');
     const [step, setStep] = useState(1); 
     const navigate = useNavigate();
-
-    const handleSendOTP = async () => {
+    
+const handleSendOTP = async () => {
     try {
-        const res = await axios.post(`${API_URL}/api/forgot-password`, 
-            { email }, 
-            { timeout: 25000 } // 25 seconds tak wait karega
-        );
+        // Bina timeout ke try karo
+        const res = await axios.post(`${API_URL}/api/forgot-password`, { email });
         if (res.data.success) {
-            alert("OTP aapki email par bhej diya gaya hai!");
+            alert("OTP bhej diya gaya hai! Spam folder check karein.");
             setStep(2);
-        } else {
-            alert(res.data.message);
         }
     } catch (err) {
-        console.error(err);
-        // Agar 25 sec baad bhi response na aaye toh ye message dikhayega
-        alert("Server thoda slow hai, 1 minute ruko aur phir se try karo!");
+        console.error("Error details:", err.response || err);
+        alert("Network slow hai, par check karo shayad mail aa gayi ho.");
     }
 };
 

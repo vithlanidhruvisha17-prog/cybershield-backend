@@ -12,8 +12,11 @@ const app = express();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Middleware
-app.use(cors()); 
-app.use(express.json({ limit: '50mb' })); 
+app.use(cors({
+    origin: "*", // Sabko allow karo
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(fileUpload()); 
 
@@ -98,38 +101,29 @@ app.post("/api/login", async (req, res) => {
     else res.json({ success: false, message: "Invalid credentials" });
 });
 
-// 1. FORGOT PASSWORD - OTP Bhejna
-app.post(['/api/forgot-password', '/api/forgotpassword'], async (req, res) => {
+app.post('/api/forgot-password', async (req, res) => {
     const { email } = req.body;
     try {
         const user = await User.findOne({ email });
-        if (!user) {
-            return res.json({ success: false, message: "User nahi mila!" });
-        }
+        if (!user) return res.json({ success: false, message: "User not found!" });
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         user.resetOTP = otp;
-        user.otpExpires = Date.now() + 600000; 
+        user.otpExpires = Date.now() + 600000;
         await user.save();
 
-        const mailOptions = {
+        // Mail bhejte raho, par frontend ko turant reply do
+        transporter.sendMail({
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'CyberShield Reset OTP',
-            text: `Your OTP is: ${otp}`
-        };
+            html: `<h1>OTP: ${otp}</h1>`
+        }).catch(err => console.log("Mail Send Error:", err)); // Background mein handle karo
 
-        // ⚠️ Sabse zaroori: transporter.sendMail ko await karo
-        // Lekin error handle karne ke liye try-catch ke andar rakho
-        await transporter.sendMail(mailOptions);
-        
-        // Response tabhi bhejo jab mail chali jaye
-        return res.json({ success: true, message: "OTP bhej diya!" });
+        return res.status(200).json({ success: true, message: "OTP process started!" });
 
     } catch (err) {
-        console.error("Mail Error:", err);
-        // Agar yahan error aaye toh request ko khatam karo, varna 504 aayega
-        return res.status(500).json({ success: false, message: "Email service down hai." });
+        return res.status(500).json({ success: false, message: "Server Error" });
     }
 });
 
