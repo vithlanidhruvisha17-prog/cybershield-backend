@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-// ✅ API_URL import karna zaroori hai
 import API_URL from '../config'; 
 
 const ForgotPassword = () => {
@@ -13,7 +12,6 @@ const ForgotPassword = () => {
 
     const handleSendOTP = async () => {
         try {
-            // ❌ Pehle yahan http://localhost:5000 tha
             // ✅ Ab ye config wali link use karega
             const res = await axios.post(`${API_URL}/api/forgot-password`, { email });
             if (res.data.success) {

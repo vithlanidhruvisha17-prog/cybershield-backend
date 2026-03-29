@@ -60,8 +60,8 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'vithlanidhruvisha17@gmail.com',
-        pass: 'jachxayvbnnyjgej'  
+        user: process.env.EMAIL_USER, // ✅ Ye Render se lega
+        pass: process.env.EMAIL_PASS  // ✅ Ye bhi Render se lega
     }
 });
 
