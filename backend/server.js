@@ -59,12 +59,9 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
     auth: {
         user: 'vithlanidhruvisha17@gmail.com',
-        pass: 'ymqiizodqctywawp'  
+        pass: 'jachxayvbnnyjgej'  
     }
 });
 
@@ -92,7 +89,6 @@ app.post("/api/login", async (req, res) => {
     else res.json({ success: false, message: "Invalid credentials" });
 });
 
-// 1. FORGOT PASSWORD - OTP Bhejna
 // 1. FORGOT PASSWORD - OTP Bhejna
 app.post('/api/forgot-password', async (req, res) => {
     const { email } = req.body;
