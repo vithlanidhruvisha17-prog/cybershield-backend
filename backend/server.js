@@ -103,28 +103,33 @@ app.post('/api/forgot-password', async (req, res) => {
     const { email } = req.body;
     try {
         const user = await User.findOne({ email });
-        if (!user) return res.json({ success: false, message: "User nahi mila! Sahi email daalo." });
+        if (!user) {
+            return res.json({ success: false, message: "User nahi mila!" });
+        }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         user.resetOTP = otp;
         user.otpExpires = Date.now() + 600000; 
         await user.save();
 
-       // Line 113 ke aas-paas isko change karein:
-const mailOptions = {
-    from: process.env.EMAIL_USER, // Display name hatakar simple kar diya
-    to: email,
-    subject: 'CyberShield - Password Reset OTP',
-    html: `<h1>Your OTP is: ${otp}</h1><p>Valid for 10 minutes.</p>`
-};
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'CyberShield Reset OTP',
+            html: `<h1>OTP: ${otp}</h1>`
+        };
 
+        // ⚠️ Sabse zaroori: transporter.sendMail ko await karo
+        // Lekin error handle karne ke liye try-catch ke andar rakho
         await transporter.sendMail(mailOptions);
-        console.log("✅ OTP sent to:", email);
-        res.json({ success: true, message: "OTP bhej diya hai!" });
+        
+        // Response tabhi bhejo jab mail chali jaye
+        return res.json({ success: true, message: "OTP bhej diya!" });
 
     } catch (err) {
-        console.error("❌ Nodemailer Error:", err); // Ye Render logs mein error dikhayega
-        res.status(500).json({ success: false, message: "Email service failed. Logs check karo." });
+        console.error("Mail Error:", err);
+        // Agar yahan error aaye toh request ko khatam karo, varna 504 aayega
+        return res.status(500).json({ success: false, message: "Email service down hai." });
     }
 });
 

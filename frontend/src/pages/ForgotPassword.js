@@ -11,20 +11,23 @@ const ForgotPassword = () => {
     const navigate = useNavigate();
 
     const handleSendOTP = async () => {
-        try {
-            // ✅ Ab ye config wali link use karega
-            const res = await axios.post(`${API_URL}/api/forgot-password`, { email });
-            if (res.data.success) {
-                alert("OTP aapki email par bhej diya gaya hai!");
-                setStep(2);
-            } else {
-                alert(res.data.message);
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Kuch gadbad ho gayi! Server check karo.");
+    try {
+        const res = await axios.post(`${API_URL}/api/forgot-password`, 
+            { email }, 
+            { timeout: 25000 } // 25 seconds tak wait karega
+        );
+        if (res.data.success) {
+            alert("OTP aapki email par bhej diya gaya hai!");
+            setStep(2);
+        } else {
+            alert(res.data.message);
         }
-    };
+    } catch (err) {
+        console.error(err);
+        // Agar 25 sec baad bhi response na aaye toh ye message dikhayega
+        alert("Server thoda slow hai, 1 minute ruko aur phir se try karo!");
+    }
+};
 
     const handleResetPassword = async () => {
         try {
