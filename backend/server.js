@@ -59,11 +59,15 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
         user: 'vithlanidhruvisha17@gmail.com',
-        pass: 'ymqiizodqctywawp' 
+        pass: 'ymqiizodqctywawp'  
     }
 });
+
 
 /* ---------------- AUTH ROUTES (Login, Signup, Forgot Password) ---------------- */
 
@@ -89,28 +93,33 @@ app.post("/api/login", async (req, res) => {
 });
 
 // 1. FORGOT PASSWORD - OTP Bhejna
+// 1. FORGOT PASSWORD - OTP Bhejna
 app.post('/api/forgot-password', async (req, res) => {
     const { email } = req.body;
     try {
         const user = await User.findOne({ email });
-        if (!user) return res.json({ success: false, message: "User nahi mila bhai!" });
+        if (!user) return res.json({ success: false, message: "User nahi mila! Sahi email daalo." });
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         user.resetOTP = otp;
         user.otpExpires = Date.now() + 600000; 
         await user.save();
 
-        // Route ke andar jahan transporter.sendMail hai:
-await transporter.sendMail({
-    from: `"CyberShield Hub" <${process.env.EMAIL_USER}>`, // ✅ Dynamic email
-    to: email,
-    subject: 'Your Shield Reset OTP',
-    html: `<div style="background:#000; color:#FFD700; padding:20px; border:2px solid #FFD700; border-radius:10px;">
-           <h1>OTP: ${otp}</h1><p>Valid for 10 minutes.</p></div>`
-});
+        const mailOptions = {
+            from: `"CyberShield Hub" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Your Shield Reset OTP',
+            html: `<div style="background:#000; color:#FFD700; padding:20px; border:2px solid #FFD700; border-radius:10px;">
+                   <h1>OTP: ${otp}</h1><p>Valid for 10 minutes.</p></div>`
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log("✅ OTP sent to:", email);
         res.json({ success: true, message: "OTP bhej diya hai!" });
+
     } catch (err) {
-        res.json({ success: false, message: "Error aa gaya!" });
+        console.error("❌ Nodemailer Error:", err); // Ye Render logs mein error dikhayega
+        res.status(500).json({ success: false, message: "Email service failed. Logs check karo." });
     }
 });
 
