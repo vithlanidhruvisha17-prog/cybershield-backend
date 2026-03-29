@@ -55,7 +55,6 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
     following: String
 }), "Follows");
 
-/* ---------------- EMAIL CONFIG ---------------- */
 
 /* ---------------- EMAIL CONFIG ---------------- */
 const transporter = nodemailer.createTransport({
@@ -116,13 +115,13 @@ app.post('/api/forgot-password', async (req, res) => {
         user.otpExpires = Date.now() + 600000; 
         await user.save();
 
-        const mailOptions = {
-            from: `"CyberShield Hub" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: 'Your Shield Reset OTP',
-            html: `<div style="background:#000; color:#FFD700; padding:20px; border:2px solid #FFD700; border-radius:10px;">
-                   <h1>OTP: ${otp}</h1><p>Valid for 10 minutes.</p></div>`
-        };
+       // Line 113 ke aas-paas isko change karein:
+const mailOptions = {
+    from: process.env.EMAIL_USER, // Display name hatakar simple kar diya
+    to: email,
+    subject: 'CyberShield - Password Reset OTP',
+    html: `<h1>Your OTP is: ${otp}</h1><p>Valid for 10 minutes.</p>`
+};
 
         await transporter.sendMail(mailOptions);
         console.log("✅ OTP sent to:", email);
