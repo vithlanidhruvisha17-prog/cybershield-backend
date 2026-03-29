@@ -99,7 +99,7 @@ app.post("/api/login", async (req, res) => {
 });
 
 // 1. FORGOT PASSWORD - OTP Bhejna
-app.post('/api/forgot-password', async (req, res) => {
+app.post(['/api/forgot-password', '/api/forgotpassword'], async (req, res) => {
     const { email } = req.body;
     try {
         const user = await User.findOne({ email });
