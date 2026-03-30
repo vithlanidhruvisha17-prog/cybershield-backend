@@ -68,6 +68,8 @@ const transporter = nodemailer.createTransport({
         user: "vithlanidhruvisha17@gmail.com", // Aapka Brevo login email
         pass: "xsmtpsib-9bd7873a384951570837c1c5bd41c21eb9389c74218bb0462a857957d4222eaa-NFXxU9fPM4VbErCe" // Jo abhi copy ki
     }
+    debug: true,
+    logger: true 
 });
 
 /* ---------------- AUTH ROUTES (Login, Signup, Forgot Password) ---------------- */
