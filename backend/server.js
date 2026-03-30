@@ -59,14 +59,21 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 }), "Follows");
 
 
-/* ---------------- EMAIL CONFIG ---------------- */
+/* ---------------- GMAIL APP PASSWORD CONFIG ---------------- */
 const transporter = nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 465,
-    secure: true,
+    service: 'gmail',
     auth: {
-        user: "vithlanidhruvisha17@gmail.com",
-        pass: process.env.BREVO_PASS // 👈 Ab ye Render ki settings se uthayega
+        user: 'vithlanidhruvisha17@gmail.com',
+        pass: process.env.EMAIL_PASS // Render mein jo Key dali hai wahi naam yahan likho
+    }
+});
+
+// Isse logs mein confirm ho jayega ki key sahi hai ya nahi
+transporter.verify((error, success) => {
+    if (error) {
+        console.log("❌ Gmail Config Error:", error.message);
+    } else {
+        console.log("🚀 Gmail is ready to send OTP!");
     }
 });
 
@@ -104,27 +111,31 @@ app.post('/api/forgot-password', async (req, res) => {
         user.otpExpires = Date.now() + 600000;
         await user.save();
 
-        // 🔥 YEH LINE ZAROORI HAI LOGS MEIN DEKHNE KE LIYE
-        console.log("-----------------------------------------");
-        console.log(`🔥 ALERT! OTP for ${email} is: ${otp}`);
-        console.log("-----------------------------------------");
+        console.log(`🔥 OTP generated for ${email}: ${otp}`);
 
-        // Mail bhejte raho
-        transporter.sendMail({
-    from: "vithlanidhruvisha17@gmail.com", // ✅ Direct email likh do
-    to: email,
-    subject: 'CyberShield Reset OTP',
-    html: `<h1>OTP: ${otp}</h1>`
-}).then(() => {
-    console.log("✅ Brevo: Mail Sent Successfully");
-}).catch(err => {
-    console.log("❌ Brevo: Mail Error:", err.message);
-});
-        return res.status(200).json({ success: true, message: "OTP process started! Spam folder check karo." });
+        const mailOptions = {
+            from: 'vithlanidhruvisha17@gmail.com',
+            to: email,
+            subject: 'CyberShield Reset OTP',
+            html: `
+                <div style="font-family: Arial, sans-serif; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+                    <h2 style="color: #FFD700;">CyberShield Security</h2>
+                    <p>Aapka password reset OTP niche diya gaya hai:</p>
+                    <h1 style="letter-spacing: 5px; color: #333;">${otp}</h1>
+                    <p>Ye OTP 10 minute tak valid hai.</p>
+                </div>
+            `
+        };
+
+        // Mail bhej rahe hain
+        await transporter.sendMail(mailOptions);
+        
+        console.log("✅ Mail Sent Successfully via Gmail");
+        return res.status(200).json({ success: true, message: "OTP sent!" });
 
     } catch (err) {
-        console.log("Server Error:", err);
-        return res.status(500).json({ success: false, message: "Server Error" });
+        console.log("❌ Gmail Send Error:", err.message);
+        return res.status(500).json({ success: false, message: "Server error while sending mail" });
     }
 });
 
