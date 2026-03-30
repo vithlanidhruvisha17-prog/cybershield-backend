@@ -60,22 +60,29 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 
 
 /* ---------------- GMAIL APP PASSWORD CONFIG ---------------- */
+/* ---------------- FINAL GMAIL CONFIG (SSL) ---------------- */
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Port 465 ke liye true hona chahiye
     auth: {
         user: 'vithlanidhruvisha17@gmail.com',
-        pass: process.env.EMAIL_PASS // Render mein jo Key dali hai wahi naam yahan likho
+        pass: process.env.GMAIL_APP_PASS 
+    },
+    tls: {
+        rejectUnauthorized: false // Connection timeout rokne ke liye
     }
 });
 
-// Isse logs mein confirm ho jayega ki key sahi hai ya nahi
+// Isse verify ho jayega
 transporter.verify((error, success) => {
     if (error) {
-        console.log("❌ Gmail Config Error:", error.message);
+        console.log("❌ Connection Error:", error.message);
     } else {
-        console.log("🚀 Gmail is ready to send OTP!");
+        console.log("🚀 Server is connected and ready to send OTP!");
     }
 });
+
 
 /* ---------------- AUTH ROUTES (Login, Signup, Forgot Password) ---------------- */
 
