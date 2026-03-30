@@ -67,7 +67,7 @@ const transporter = nodemailer.createTransport({
     secure: true, // Port 465 ke liye true hona chahiye
     auth: {
         user: 'vithlanidhruvisha17@gmail.com',
-        pass: process.env.GMAIL_APP_PASS 
+        pass: process.env.EMAIL_PASS
     },
     tls: {
         rejectUnauthorized: false // Connection timeout rokne ke liye
