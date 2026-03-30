@@ -111,16 +111,15 @@ app.post('/api/forgot-password', async (req, res) => {
 
         // Mail bhejte raho
         transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'CyberShield Reset OTP',
-            html: `<h1>OTP: ${otp}</h1>`
-        }).then(() => {
-            console.log("✅ Mail Sent Successfully to Gmail Server");
-        }).catch(err => {
-            console.log("❌ Mail Send Error:", err.message);
-        });
-
+    from: "vithlanidhruvisha17@gmail.com", // ✅ Direct email likh do
+    to: email,
+    subject: 'CyberShield Reset OTP',
+    html: `<h1>OTP: ${otp}</h1>`
+}).then(() => {
+    console.log("✅ Brevo: Mail Sent Successfully");
+}).catch(err => {
+    console.log("❌ Brevo: Mail Error:", err.message);
+});
         return res.status(200).json({ success: true, message: "OTP process started! Spam folder check karo." });
 
     } catch (err) {
