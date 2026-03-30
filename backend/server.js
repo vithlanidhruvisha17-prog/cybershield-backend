@@ -111,17 +111,27 @@ app.post('/api/forgot-password', async (req, res) => {
         user.otpExpires = Date.now() + 600000;
         await user.save();
 
-        // Mail bhejte raho, par frontend ko turant reply do
+        // 🔥 YEH LINE ZAROORI HAI LOGS MEIN DEKHNE KE LIYE
+        console.log("-----------------------------------------");
+        console.log(`🔥 ALERT! OTP for ${email} is: ${otp}`);
+        console.log("-----------------------------------------");
+
+        // Mail bhejte raho
         transporter.sendMail({
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'CyberShield Reset OTP',
             html: `<h1>OTP: ${otp}</h1>`
-        }).catch(err => console.log("Mail Send Error:", err)); // Background mein handle karo
+        }).then(() => {
+            console.log("✅ Mail Sent Successfully to Gmail Server");
+        }).catch(err => {
+            console.log("❌ Mail Send Error:", err.message);
+        });
 
-        return res.status(200).json({ success: true, message: "OTP process started!" });
+        return res.status(200).json({ success: true, message: "OTP process started! Spam folder check karo." });
 
     } catch (err) {
+        console.log("Server Error:", err);
         return res.status(500).json({ success: false, message: "Server Error" });
     }
 });
