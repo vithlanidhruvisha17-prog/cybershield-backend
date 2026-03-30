@@ -61,21 +61,14 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 
 /* ---------------- EMAIL CONFIG ---------------- */
 const transporter = nodemailer.createTransport({
-    service: "gmail",
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Port 465 ke liye true
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false, // 587 ke liye false hi rehta hai
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false // Ye zaroori hai self-signed certificate errors ke liye
-    },
-    connectionTimeout: 10000, // 10 seconds wait karega
-    greetingTimeout: 10000
+        user: "vithlanidhruvisha17@gmail.com", // Aapka Brevo login email
+        pass: "xsmtpsib-9bd7873a384951570837c1c5bd41c21eb9389c74218bb0462a857957d4222eaa-NFXxU9fPM4VbErCe" // Jo abhi copy ki
+    }
 });
-
 
 /* ---------------- AUTH ROUTES (Login, Signup, Forgot Password) ---------------- */
 
