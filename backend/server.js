@@ -63,13 +63,11 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 const transporter = nodemailer.createTransport({
     host: "smtp-relay.brevo.com",
     port: 587,
-    secure: false, // 587 ke liye false hi rehta hai
+    secure: false,
     auth: {
-        user: "vithlanidhruvisha17@gmail.com", // Aapka Brevo login email
-        pass: "xsmtpsib-9bd7873a384951570837c1c5bd41c21eb9389c74218bb0462a857957d4222eaa-NFXxU9fPM4VbErCe" // Jo abhi copy ki
+        user: "vithlanidhruvisha17@gmail.com",
+        pass: process.env.BREVO_PASS // 👈 Ab ye Render ki settings se uthayega
     }
-    debug: true,
-    logger: true 
 });
 
 /* ---------------- AUTH ROUTES (Login, Signup, Forgot Password) ---------------- */
