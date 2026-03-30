@@ -62,8 +62,8 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 /* ---------------- EMAIL CONFIG ---------------- */
 const transporter = nodemailer.createTransport({
     host: "smtp-relay.brevo.com",
-    port: 587,
-    secure: false,
+    port: 465,
+    secure: true,
     auth: {
         user: "vithlanidhruvisha17@gmail.com",
         pass: process.env.BREVO_PASS // 👈 Ab ye Render ki settings se uthayega
