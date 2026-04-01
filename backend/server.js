@@ -244,11 +244,34 @@ app.post("/api/reports/:id/comment", async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/cyber-news', (req, res) => {
-    res.json({ 
-        success: true, 
-        news: ["CyberShield is now live!", "Stay safe from phishing", "New AI model integrated"] 
-    });
+/* ---------------- REAL-TIME CYBER NEWS LOGIC ---------------- */
+app.get("/api/cyber-news", async (req, res) => {
+    try {
+        // Hum BleepingComputer ka RSS feed use kar rahe hain real-time news ke liye
+        const rssUrl = "https://www.bleepingcomputer.com/feed/";
+        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+        
+        const response = await axios.get(apiUrl);
+        
+        // Items nikal kar sirf titles ka array bhej rahe hain (Top 12 news)
+        const newsTitles = response.data.items.slice(0, 12).map(item => item.title);
+        
+        res.json({ 
+            success: true, 
+            news: newsTitles 
+        });
+    } catch (err) {
+        console.error("News Fetch Error:", err.message);
+        // Agar API fail ho jaye toh backup news:
+        res.json({ 
+            success: true, 
+            news: [
+                "⚠️ Security Alert: Keep your software updated.",
+                "🛡️ Tip: Use Multi-Factor Authentication (MFA) everywhere.",
+                "🚫 Phishing Warning: Don't click on suspicious links."
+            ] 
+        });
+    }
 });
 
 /* ---------------- FOLLOW SYSTEM ---------------- */
