@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Shield, Target, Users, Zap } from 'lucide-react';
+import { Shield, Zap } from 'lucide-react';
 
 const About = () => {
     const navigate = useNavigate();

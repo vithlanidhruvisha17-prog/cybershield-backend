@@ -8,32 +8,37 @@ const Report = () => {
     const [news, setNews] = useState([]);
     const [commentInputs, setCommentInputs] = useState({});
     const [expandedPosts, setExpandedPosts] = useState({}); 
+    const [isPaused, setIsPaused] = useState(false);
     
     const username = localStorage.getItem("currentUser") || "Guest";
 
     // 1. Fetch Data & Check Following Status
     useEffect(() => {
         const fetchData = async () => {
-    try {
-        setLoading(true);
-        const postRes = await fetch(`${API_URL}/api/reports`);
-        const postData = await postRes.json();
+            try {
+                const [postRes, newsRes] = await Promise.all([
+                    fetch(`${API_URL}/api/reports`),
+                    fetch(`${API_URL}/api/cyber-news`)
+                ]);
+                const postData = await postRes.json();
+                const newsData = await newsRes.json();
+                
+                // Har post ke liye check karega ki aapne user ko follow kiya hai ya nahi
+                const postsWithFollowStatus = await Promise.all(postData.map(async (post) => {
+                    if (post.username === username) return post;
+                    const followRes = await fetch(`${API_URL}/api/is-following/${username}/${post.username}`);
+                    const followData = await followRes.json();
+                    return { ...post, isFollowing: followData.following };
+                }));
 
-        // News fetch ko alag rakho taaki feed na ruke
-        try {
-            const newsRes = await fetch(`${API_URL}/api/cyber-news`);
-            const newsData = await newsRes.json();
-            if (newsData.success) setNews(newsData.news);
-        } catch (e) { console.log("News fetch failed"); }
-
-        // ... baki logic same ...
-        setPosts(postData); 
-    } catch (err) {
-        console.error("Fetch error:", err);
-    } finally {
-        setLoading(false); // Ye har haal mein loading band karega
-    }
-};
+                setPosts(postsWithFollowStatus);
+                if (newsData.success) setNews(newsData.news);
+                setLoading(false);
+            } catch (err) {
+                console.error("Fetch error:", err);
+                setLoading(false);
+            }
+        };
         fetchData();
     }, [username]);
 
@@ -103,19 +108,33 @@ const Report = () => {
                 <main className="flex-1 max-w-[650px] mx-auto w-full">
                     
                     {/* News Ticker */}
-                    <div className="mb-8 overflow-hidden relative bg-[#0a0a0a] border border-zinc-800/50 py-3 rounded-2xl shadow-inner">
-                        <div className="flex">
-                            <motion.div animate={{ x: ["0%", "-50%"] }} transition={{ repeat: Infinity, duration: 25, ease: "linear" }} className="flex whitespace-nowrap">
-                                {[...news, ...news].map((n, i) => (
-                                    <div key={i} className="flex items-center px-8 border-r border-zinc-900/50">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-red-600 mr-3 animate-pulse"></span>
-                                        <span className="text-red-500 font-extrabold text-[10px] uppercase tracking-wider mr-3">Live Alert</span>
-                                        <span className="text-zinc-300 text-[11px] font-medium tracking-wide">{n}</span>
-                                    </div>
-                                ))}
-                            </motion.div>
-                        </div>
-                    </div>
+                    <div 
+    className="mb-8 overflow-hidden relative bg-[#0a0a0a] border border-zinc-800/50 py-3 rounded-2xl shadow-inner"
+    onMouseEnter={() => setIsPaused(true)}  // Mouse aate hi pause
+    onMouseLeave={() => setIsPaused(false)} // Mouse jaate hi start
+>
+    <div className="flex">
+        <motion.div 
+            animate={isPaused ? { x: undefined } : { x: ["0%", "-50%"] }} 
+            transition={{ 
+                repeat: Infinity, 
+                duration: 40, 
+                ease: "linear" 
+            }} 
+            className="flex whitespace-nowrap cursor-pointer"
+        >
+            {[...news, ...news].map((n, i) => (
+                <div key={i} className="flex items-center px-8 border-r border-zinc-900/50">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-600 mr-3 animate-pulse"></span>
+                    <span className="text-red-500 font-extrabold text-[10px] uppercase tracking-wider mr-3">Live Alert</span>
+                    <span className="text-zinc-300 text-[11px] font-medium tracking-wide  transition-colors">
+                        {n}
+                    </span>
+                </div>
+            ))}
+        </motion.div>
+    </div>
+</div>
 
                     <div className="space-y-10">
                         {loading ? (

@@ -122,7 +122,7 @@ const Home = () => {
                     </div>
                     <div className="flex space-x-8">
                         {['Instagram', 'Twitter', 'LinkedIn'].map(social => (
-                            <a key={social} href="#" className="text-gray-500 hover:text-[#FFD700] font-bold uppercase text-xs tracking-widest transition-colors">{social}</a>
+                            <a  key={social}  className="text-gray-500 hover:text-[#FFD700] font-bold uppercase text-xs tracking-widest transition-colors">{social}</a>
                         ))}
                     </div>
                 </div>

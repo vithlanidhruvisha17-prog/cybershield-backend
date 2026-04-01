@@ -100,10 +100,44 @@ app.post("/api/signup", async (req, res) => {
 });
 
 app.post("/api/login", async (req, res) => {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username, password });
-    if (user) res.json({ success: true, user: { username: user.username } });
-    else res.json({ success: false, message: "Invalid credentials" });
+    const { username, password, email, isGoogleUser } = req.body;
+
+    try {
+        if (isGoogleUser) {
+            // 1. Google User ko Email se dhoondo
+            let user = await User.findOne({ email });
+
+            if (user) {
+                // Agar user mil gaya toh login success
+                return res.json({ success: true, user: { username: user.username } });
+            } else {
+                // 2. AGAR USER NAHI HAI TOH AUTO-SIGNUP (Naya feature)
+                // Google user ka username unki email ka pehla part bana do
+                const generatedUsername = email.split("@")[0] + Math.floor(Math.random() * 1000);
+                
+                const newUser = new User({ 
+                    fullname: "Google User", 
+                    email: email, 
+                    username: generatedUsername, 
+                    password: "google-auth-user-" + Math.random() // Dummy password
+                });
+
+                await newUser.save();
+                return res.json({ success: true, user: { username: newUser.username } });
+            }
+        }
+
+        // --- Normal Login Logic (Puraana wala) ---
+        const user = await User.findOne({ username, password });
+        if (user) {
+            res.json({ success: true, user: { username: user.username } });
+        } else {
+            res.json({ success: false, message: "Invalid credentials" });
+        }
+    } catch (err) {
+        console.error("Login Error:", err);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
 });
 
 app.post('/api/forgot-password', async (req, res) => {
@@ -253,7 +287,6 @@ app.get("/api/cyber-news", async (req, res) => {
         
         const response = await axios.get(apiUrl);
         
-        // Items nikal kar sirf titles ka array bhej rahe hain (Top 12 news)
         const newsTitles = response.data.items.slice(0, 12).map(item => item.title);
         
         res.json({ 
@@ -262,7 +295,6 @@ app.get("/api/cyber-news", async (req, res) => {
         });
     } catch (err) {
         console.error("News Fetch Error:", err.message);
-        // Agar API fail ho jaye toh backup news:
         res.json({ 
             success: true, 
             news: [
