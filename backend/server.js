@@ -62,14 +62,14 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 /* ---------------- FINAL GMAIL CONFIG (SSL) ---------------- */
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Port 465 ke liye true hona chahiye
+    port: 587,
+    secure: false, // Port 587 ke liye false hona chahiye (TLS)
     auth: {
         user: 'vithlanidhruvisha17@gmail.com',
         pass: process.env.EMAIL_PASS
     },
     tls: {
-        rejectUnauthorized: false // Connection timeout rokne ke liye
+        rejectUnauthorized: false // Connection timeout aur security block rokne ke liye
     }
 });
 
