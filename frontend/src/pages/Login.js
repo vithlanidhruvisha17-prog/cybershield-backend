@@ -32,7 +32,7 @@ const Login = () => {
             }
         } catch (error) {
             console.error("Google Login error:", error);
-            alert("Server se connect nahi ho paya!");
+            alert("Cannot connect to server!");
         }
     };
 

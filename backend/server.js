@@ -59,7 +59,6 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 }), "Follows");
 
 
-/* ---------------- GMAIL APP PASSWORD CONFIG ---------------- */
 /* ---------------- FINAL GMAIL CONFIG (SSL) ---------------- */
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -243,6 +242,13 @@ app.post("/api/reports/:id/comment", async (req, res) => {
         const report = await Report.findByIdAndUpdate(req.params.id, { $push: { comments: { username, text } } }, { new: true });
         res.json({ success: true, report });
     } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/cyber-news', (req, res) => {
+    res.json({ 
+        success: true, 
+        news: ["CyberShield is now live!", "Stay safe from phishing", "New AI model integrated"] 
+    });
 });
 
 /* ---------------- FOLLOW SYSTEM ---------------- */

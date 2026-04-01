@@ -14,30 +14,26 @@ const Report = () => {
     // 1. Fetch Data & Check Following Status
     useEffect(() => {
         const fetchData = async () => {
-            try {
-                const [postRes, newsRes] = await Promise.all([
-                    fetch(`${API_URL}/api/reports`),
-                    fetch(`${API_URL}/api/cyber-news`)
-                ]);
-                const postData = await postRes.json();
-                const newsData = await newsRes.json();
-                
-                // Har post ke liye check karega ki aapne user ko follow kiya hai ya nahi
-                const postsWithFollowStatus = await Promise.all(postData.map(async (post) => {
-                    if (post.username === username) return post;
-                    const followRes = await fetch(`${API_URL}/api/is-following/${username}/${post.username}`);
-                    const followData = await followRes.json();
-                    return { ...post, isFollowing: followData.following };
-                }));
+    try {
+        setLoading(true);
+        const postRes = await fetch(`${API_URL}/api/reports`);
+        const postData = await postRes.json();
 
-                setPosts(postsWithFollowStatus);
-                if (newsData.success) setNews(newsData.news);
-                setLoading(false);
-            } catch (err) {
-                console.error("Fetch error:", err);
-                setLoading(false);
-            }
-        };
+        // News fetch ko alag rakho taaki feed na ruke
+        try {
+            const newsRes = await fetch(`${API_URL}/api/cyber-news`);
+            const newsData = await newsRes.json();
+            if (newsData.success) setNews(newsData.news);
+        } catch (e) { console.log("News fetch failed"); }
+
+        // ... baki logic same ...
+        setPosts(postData); 
+    } catch (err) {
+        console.error("Fetch error:", err);
+    } finally {
+        setLoading(false); // Ye har haal mein loading band karega
+    }
+};
         fetchData();
     }, [username]);
 
