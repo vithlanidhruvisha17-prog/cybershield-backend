@@ -16,9 +16,13 @@ app.use(cors({
     origin: "*", // Sabko allow karo
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
-}));app.use(express.json({ limit: '50mb' })); 
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(fileUpload()); 
+}));
+app.use(express.json({ limit: '100mb' })); 
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
+app.use(fileUpload({
+    limits: { fileSize: 100 * 1024 * 1024 }, // 100MB max limit
+    abortOnLimit: true
+}));
 
 /* ---------------- DATABASE CONNECTION ---------------- */
 mongoose.connect(process.env.MONGO_URI)
@@ -240,28 +244,53 @@ app.get('/api/reports-count/:username', async (req, res) => {
 });
 
 app.post("/analyze-image", async (req, res) => {
-    if (!req.files || !req.files.image) return res.status(400).json({ error: "No image" });
+    // 1. Check if file exists
+    if (!req.files || !req.files.image) {
+        return res.status(400).json({ error: "No image uploaded" });
+    }
+
     const imageFile = req.files.image;
     const username = req.body.username || "Anonymous"; 
-    const base64Image = `data:${imageFile.mimetype};base64,${imageFile.data.toString('base64')}`;
-
+    
     try {
+        // Base64 create karna (Frontend pe dikhane ke liye)
+        const base64Image = `data:${imageFile.mimetype};base64,${imageFile.data.toString('base64')}`;
+
+        // 2. OCR Processing (Tesseract)
         const worker = await Tesseract.createWorker('eng');
         const { data: { text } } = await worker.recognize(imageFile.data);
         await worker.terminate(); 
 
+        if (!text || text.trim() === "") {
+            return res.json({ success: false, message: "Image mein koi text nahi mila!" });
+        }
+
+        // 3. AI Analysis with Groq
         const chatCompletion = await groq.chat.completions.create({
-            messages: [{ role: "system", content: "You are a Cyber Security Expert. Analyze for threats, Risk Rating (0-10), and 3 safety tips." }, { role: "user", content: text }],
-            model: "llama3-8b-8192",
+            messages: [
+                { role: "system", content: "You are a Cyber Security Expert. Analyze for threats, Risk Rating (0-10), and 3 safety tips." }, 
+                { role: "user", content: text }
+            ],
+            model: "llama3-8b-8192", // Sahi model
         });
+
         const aiText = chatCompletion.choices[0]?.message?.content || "Analysis Failed";
-        await Report.create({ text, image: base64Image, result: aiText, username });
+
+        // 4. Save to Database
+        await Report.create({ 
+            text: text, 
+            image: base64Image, 
+            result: aiText, 
+            username: username 
+        });
+
         res.json({ success: true, result: aiText, image: base64Image });
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("❌ Analysis Error:", err.message);
+        res.status(500).json({ success: false, error: "Server error during analysis" });
     }
 });
-
 /* ---------------- FEED & SOCIAL SYSTEM ---------------- */
 
 app.get('/api/reports', async (req, res) => {
