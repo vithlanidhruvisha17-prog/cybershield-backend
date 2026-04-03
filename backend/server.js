@@ -219,7 +219,7 @@ app.post("/analyze", async (req, res) => {
                 { role: "system", content: "You are a Cyber Security Expert. Analyze for threats, Risk Rating (0-10), and 3 safety tips." },
                 { role: "user", content: text }
             ],
-            model: "llama3-8b-8192", // Zyadatar stable model ye hai
+            model: "llama-3.3-70b-versatile",
         });
 
         const aiText = chatCompletion.choices[0]?.message?.content || "Analysis Failed";
@@ -271,7 +271,7 @@ app.post("/analyze-image", async (req, res) => {
                 { role: "system", content: "You are a Cyber Security Expert. Analyze for threats, Risk Rating (0-10), and 3 safety tips." }, 
                 { role: "user", content: text }
             ],
-            model: "llama3-8b-8192", // Sahi model
+            model: "llama-3.3-70b-versatile",
         });
 
         const aiText = chatCompletion.choices[0]?.message?.content || "Analysis Failed";
