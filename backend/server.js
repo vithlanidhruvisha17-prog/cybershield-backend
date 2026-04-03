@@ -207,16 +207,35 @@ app.post('/api/reset-password', async (req, res) => {
 app.post("/analyze", async (req, res) => {
     const { text, username } = req.body;
     if (!text) return res.status(400).json({ error: "Text required" });
+    
     try {
+        console.log("Starting Groq Analysis for:", text); // Debugging line
         const chatCompletion = await groq.chat.completions.create({
-            messages: [{ role: "system", content: "You are a Cyber Security Expert. Analyze for threats, Risk Rating (0-10), and 3 safety tips." }, { role: "user", content: text }],
-            model: "llama-3.3-70b-versatile",
+            messages: [
+                { role: "system", content: "You are a Cyber Security Expert. Analyze for threats, Risk Rating (0-10), and 3 safety tips." },
+                { role: "user", content: text }
+            ],
+            model: "llama-3-70b-8192", // Zyadatar stable model ye hai
         });
+
         const aiText = chatCompletion.choices[0]?.message?.content || "Analysis Failed";
+        
+        // Report save kar rahe hain
         await Report.create({ text, result: aiText, username: username || "Anonymous" });
+        
         res.json({ success: true, result: aiText });
     } catch (error) {
-        res.status(500).json({ success: false, message: "AI Busy" });
+        console.error("❌ Groq API Error:", error.message); // Isse Render logs mein asli wajah dikhegi
+        res.status(500).json({ success: false, message: "AI Busy or API Error", error: error.message });
+    }
+});
+
+app.get('/api/reports-count/:username', async (req, res) => {
+    try {
+        const count = await Report.countDocuments({ username: req.params.username });
+        res.json({ count });
+    } catch (err) {
+        res.status(500).json({ error: "Count fetch failed" });
     }
 });
 
