@@ -7,13 +7,14 @@ const Groq = require("groq-sdk");
 const fileUpload = require("express-fileupload");
 const Tesseract = require("tesseract.js");
 const nodemailer = require("nodemailer");
+const bcrypt = require("bcrypt");
 
 const app = express();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Middleware
 app.use(cors({
-    origin: "*", // Sabko allow karo
+    origin: "*", 
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
@@ -43,6 +44,18 @@ const UserSchema = new mongoose.Schema({
     otpExpires: Date,
     createdAt: { type: Date, default: Date.now }
 });
+
+UserSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
+
 const User = mongoose.model("User", UserSchema, "users");
 
 const ReportSchema = new mongoose.Schema({
@@ -67,17 +80,16 @@ const Follow = mongoose.model("Follow", new mongoose.Schema({
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false, // Port 587 ke liye false hona chahiye (TLS)
+    secure: false, 
     auth: {
         user: 'vithlanidhruvisha17@gmail.com',
         pass: process.env.EMAIL_PASS
     },
     tls: {
-        rejectUnauthorized: false // Connection timeout aur security block rokne ke liye
+        rejectUnauthorized: false 
     }
 });
 
-// Isse verify ho jayega
 transporter.verify((error, success) => {
     if (error) {
         console.log("❌ Connection Error:", error.message);
@@ -108,15 +120,11 @@ app.post("/api/login", async (req, res) => {
 
     try {
         if (isGoogleUser) {
-            // 1. Google User ko Email se dhoondo
             let user = await User.findOne({ email });
 
             if (user) {
-                // Agar user mil gaya toh login success
                 return res.json({ success: true, user: { username: user.username } });
             } else {
-                // 2. AGAR USER NAHI HAI TOH AUTO-SIGNUP (Naya feature)
-                // Google user ka username unki email ka pehla part bana do
                 const generatedUsername = email.split("@")[0] + Math.floor(Math.random() * 1000);
                 
                 const newUser = new User({ 
@@ -131,18 +139,26 @@ app.post("/api/login", async (req, res) => {
             }
         }
 
-        // --- Normal Login Logic (Puraana wala) ---
-        const user = await User.findOne({ username, password });
+        const user = await User.findOne({ username });
+        
         if (user) {
-            res.json({ success: true, user: { username: user.username } });
+            // 2. Bcrypt se entered password aur hashed password compare karo
+            const isMatch = await bcrypt.compare(password, user.password);
+            
+            if (isMatch) {
+                res.json({ success: true, user: { username: user.username } });
+            } else {
+                res.json({ success: false, message: "Invalid credentials" });
+            }
         } else {
-            res.json({ success: false, message: "Invalid credentials" });
+            res.json({ success: false, message: "User not found!" });
         }
     } catch (err) {
         console.error("Login Error:", err);
         res.status(500).json({ success: false, message: "Server Error" });
     }
 });
+
 
 app.post('/api/forgot-password', async (req, res) => {
     const { email } = req.body;
@@ -164,14 +180,13 @@ app.post('/api/forgot-password', async (req, res) => {
             html: `
                 <div style="font-family: Arial, sans-serif; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
                     <h2 style="color: #FFD700;">CyberShield Security</h2>
-                    <p>Aapka password reset OTP niche diya gaya hai:</p>
+                    <p>Your password reset site is given below:</p>
                     <h1 style="letter-spacing: 5px; color: #333;">${otp}</h1>
-                    <p>Ye OTP 10 minute tak valid hai.</p>
+                    <p>This OTP is valid for 10 minutes.</p>
                 </div>
             `
         };
 
-        // Mail bhej rahe hain
         await transporter.sendMail(mailOptions);
         
         console.log("✅ Mail Sent Successfully via Gmail");
@@ -193,7 +208,7 @@ app.post('/api/reset-password', async (req, res) => {
             otpExpires: { $gt: Date.now() } 
         });
 
-        if (!user) return res.json({ success: false, message: "Invalid OTP ya expired!" });
+        if (!user) return res.json({ success: false, message: "Invalid OTP or expired!" });
 
         user.password = newPassword; 
         user.resetOTP = undefined;
@@ -224,12 +239,11 @@ app.post("/analyze", async (req, res) => {
 
         const aiText = chatCompletion.choices[0]?.message?.content || "Analysis Failed";
         
-        // Report save kar rahe hain
         await Report.create({ text, result: aiText, username: username || "Anonymous" });
         
         res.json({ success: true, result: aiText });
     } catch (error) {
-        console.error("❌ Groq API Error:", error.message); // Isse Render logs mein asli wajah dikhegi
+        console.error("❌ Groq API Error:", error.message); 
         res.status(500).json({ success: false, message: "AI Busy or API Error", error: error.message });
     }
 });
@@ -253,16 +267,14 @@ app.post("/analyze-image", async (req, res) => {
     const username = req.body.username || "Anonymous"; 
     
     try {
-        // Base64 create karna (Frontend pe dikhane ke liye)
         const base64Image = `data:${imageFile.mimetype};base64,${imageFile.data.toString('base64')}`;
 
-        // 2. OCR Processing (Tesseract)
         const worker = await Tesseract.createWorker('eng');
         const { data: { text } } = await worker.recognize(imageFile.data);
         await worker.terminate(); 
 
         if (!text || text.trim() === "") {
-            return res.json({ success: false, message: "Image mein koi text nahi mila!" });
+            return res.json({ success: false, message: "No text found in the image!" });
         }
 
         // 3. AI Analysis with Groq
@@ -276,7 +288,6 @@ app.post("/analyze-image", async (req, res) => {
 
         const aiText = chatCompletion.choices[0]?.message?.content || "Analysis Failed";
 
-        // 4. Save to Database
         await Report.create({ 
             text: text, 
             image: base64Image, 
