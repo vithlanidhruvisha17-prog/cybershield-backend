@@ -45,14 +45,16 @@ const UserSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-UserSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) return next();
+UserSchema.pre("save", async function () {
+    // Agar password change nahi hua toh hashing skip karo
+    if (!this.isModified("password")) return;
+
     try {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
-        next();
+        // Yahan next() call MAT karo agar function async hai
     } catch (err) {
-        next(err);
+        throw new Error(err); // Error ko throw karo, Mongoose khud handle kar lega
     }
 });
 
@@ -105,36 +107,26 @@ app.post("/api/signup", async (req, res) => {
     try {
         const { username, email, fullname, password, isGoogleUser } = req.body;
 
-        // 1. Pehle check karo user hai ya nahi
+        // Validation: Khali data check karo
+        if (!username || !email || !password) {
+            return res.status(400).json({ success: false, message: "All fields are required!" });
+        }
+
         const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-        
-        // Agar Google user hai aur pehle se account hai, toh login samjho (Success bhej do)
-        if (existingUser && isGoogleUser) {
-            return res.json({ success: true, user: { username: existingUser.username } });
-        }
+        if (existingUser) return res.status(400).json({ success: false, message: "User already exists!" });
 
-        if (existingUser) {
-            return res.status(400).json({ success: false, message: "User already exists!" });
-        }
-
-        // 2. Naya user create karo
         const newUser = new User({ 
             fullname, 
             email, 
             username, 
-            // Google user ke liye random password taaki validation pass ho jaye
             password: isGoogleUser ? ("google-auth-" + Math.random()) : password 
         });
 
         await newUser.save();
         res.json({ success: true, user: { username: newUser.username } });
     } catch (err) {
-        console.error("Signup Error:", err);
-        // Specifically MongoDB duplicate key error handle karne ke liye
-        if (err.code === 11000) {
-            return res.status(400).json({ success: false, message: "Username or Email already taken!" });
-        }
-        res.status(500).json({ success: false, message: "Database Error" });
+        console.error("Detailed Signup Error:", err);
+        res.status(500).json({ success: false, message: "Database Error: " + err.message });
     }
 });
 
