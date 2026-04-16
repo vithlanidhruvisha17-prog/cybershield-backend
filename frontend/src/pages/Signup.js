@@ -56,24 +56,26 @@ const Signup = () => {
     const handleGoogleSignup = async (credentialResponse) => {
     try {
         const details = jwtDecode(credentialResponse.credential);
-        
+        // Email se unique username generate karo
+        const generatedUsername = details.email.split('@')[0] + "_" + details.sub.slice(-4); 
+
         const res = await axios.post(`${API_URL}/api/signup`, {
-            username: details.email.split('@')[0], 
+            username: generatedUsername, 
             fullname: details.name,
             email: details.email,
             password: "GOOGLE_USER_" + details.sub, 
             isGoogleUser: true 
         });
 
-        if (res.data.success || res.data.message === "User already exists") {
+        if (res.data.success) {
             localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("currentUser", details.name);
-            
+            localStorage.setItem("currentUser", generatedUsername); 
             setShowModal(true); 
         }
     } catch (error) {
-        console.error("Signup Error:", error);
-        alert("Google Signup failed!");
+        // Agar status 400 hai toh error.response.data check karo
+        const msg = error.response?.data?.message || "Google Signup failed!";
+        alert(msg);
     }
 };
     return (
