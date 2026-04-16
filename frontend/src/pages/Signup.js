@@ -6,7 +6,7 @@ import { jwtDecode } from "jwt-decode";
 import API_URL from '../config';
 
 const Signup = () => {
-    const navigate = useNavigate(); // ✅ Sirf ek baar declare kiya
+    const navigate = useNavigate(); 
     const [formData, setFormData] = useState({
         fullname: '', email: '', username: '', password: '', confirmPassword: ''
     });
@@ -30,7 +30,7 @@ const Signup = () => {
     const handleSignup = async (e) => {
         e.preventDefault();
         if (formData.password !== formData.confirmPassword) {
-            setPasswordError("Passwords don't match, bhai!");
+            setPasswordError("Passwords don't match!");
             return;
         }
         try {
@@ -69,7 +69,6 @@ const Signup = () => {
             localStorage.setItem("isLoggedIn", "true");
             localStorage.setItem("currentUser", details.name);
             
-            // ✅ Alert hata diya, ab Modal dikhega
             setShowModal(true); 
         }
     } catch (error) {

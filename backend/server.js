@@ -103,14 +103,22 @@ transporter.verify((error, success) => {
 
 app.post("/api/signup", async (req, res) => {
     try {
-        const { username, email, fullname, password } = req.body;
-        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-        if (existingUser) return res.status(400).json({ success: false, message: "Username or Email already taken!" });
+        const { username, email, fullname, password, isGoogleUser } = req.body;
 
-        const newUser = new User({ fullname, email, username, password });
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        if (existingUser) return res.status(400).json({ success: false, message: "User already exists!" });
+
+        const newUser = new User({ 
+            fullname, 
+            email, 
+            username, 
+            password: isGoogleUser ? ("google-auth-" + Math.random()) : password 
+        });
+
         await newUser.save();
         res.json({ success: true, user: { username: newUser.username } });
     } catch (err) {
+        console.error("Signup Error:", err);
         res.status(500).json({ success: false, message: "Database Error" });
     }
 });
